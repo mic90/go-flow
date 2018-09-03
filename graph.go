@@ -57,13 +57,13 @@ func (graph *Graph) AddNode(node Node) string {
 	return id
 }
 
-func (graph *Graph) AddNodeFromRegister(nodeName, nodeVersion string) string {
+func (graph *Graph) AddNodeFromRegister(nodeName, nodeVersion string, parameters...interface{}) string {
 	nodeFactoryFunc, err := GetNode(nodeName, nodeVersion)
 	if err != nil {
 		panic(err)
 	}
 	id := uuid.NewV4().String()
-	newNode := nodeFactoryFunc()
+	newNode := nodeFactoryFunc(parameters...)
 	newNode.SetID(id)
 	log.Printf("Adding node: %s | %s | %s\n", newNode.GetName(), newNode.GetVersion(), id)
 	graph.Nodes[newNode.GetID()] = newNode

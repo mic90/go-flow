@@ -12,6 +12,7 @@ type PortWriter interface {
 type PortReader interface {
 	write(interface{}) error
 	IsRequiredNew() bool
+	ValueChanged() bool
 }
 
 type OutputPort struct {

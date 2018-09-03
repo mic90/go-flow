@@ -22,8 +22,9 @@ type OutputPortByte struct {
 
 type InputPortByte struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value byte
+	Mutex     sync.RWMutex
+	Value     byte
+	PrevValue byte
 }
 
 func NewOutputPortByte() *OutputPortByte {
@@ -58,6 +59,10 @@ func (port *InputPortByte) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortByte) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortByte) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -68,6 +73,7 @@ func (port *InputPortByte) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(byte)
 	return nil
 }
@@ -87,8 +93,9 @@ type OutputPortInt struct {
 
 type InputPortInt struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value int
+	Mutex     sync.RWMutex
+	Value     int
+	PrevValue int
 }
 
 func NewOutputPortInt() *OutputPortInt {
@@ -123,6 +130,10 @@ func (port *InputPortInt) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortInt) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortInt) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -133,6 +144,7 @@ func (port *InputPortInt) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int)
 	return nil
 }
@@ -152,8 +164,9 @@ type OutputPortInt8 struct {
 
 type InputPortInt8 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value int8
+	Mutex     sync.RWMutex
+	Value     int8
+	PrevValue int8
 }
 
 func NewOutputPortInt8() *OutputPortInt8 {
@@ -188,6 +201,10 @@ func (port *InputPortInt8) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortInt8) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortInt8) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -198,6 +215,7 @@ func (port *InputPortInt8) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int8)
 	return nil
 }
@@ -217,8 +235,9 @@ type OutputPortInt16 struct {
 
 type InputPortInt16 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value int16
+	Mutex     sync.RWMutex
+	Value     int16
+	PrevValue int16
 }
 
 func NewOutputPortInt16() *OutputPortInt16 {
@@ -253,6 +272,10 @@ func (port *InputPortInt16) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortInt16) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortInt16) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -263,6 +286,7 @@ func (port *InputPortInt16) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int16)
 	return nil
 }
@@ -282,8 +306,9 @@ type OutputPortInt32 struct {
 
 type InputPortInt32 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value int32
+	Mutex     sync.RWMutex
+	Value     int32
+	PrevValue int32
 }
 
 func NewOutputPortInt32() *OutputPortInt32 {
@@ -318,6 +343,10 @@ func (port *InputPortInt32) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortInt32) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortInt32) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -328,6 +357,7 @@ func (port *InputPortInt32) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int32)
 	return nil
 }
@@ -347,8 +377,9 @@ type OutputPortInt64 struct {
 
 type InputPortInt64 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value int64
+	Mutex     sync.RWMutex
+	Value     int64
+	PrevValue int64
 }
 
 func NewOutputPortInt64() *OutputPortInt64 {
@@ -383,6 +414,10 @@ func (port *InputPortInt64) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortInt64) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortInt64) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -393,6 +428,7 @@ func (port *InputPortInt64) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int64)
 	return nil
 }
@@ -412,8 +448,9 @@ type OutputPortUint struct {
 
 type InputPortUint struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value uint
+	Mutex     sync.RWMutex
+	Value     uint
+	PrevValue uint
 }
 
 func NewOutputPortUint() *OutputPortUint {
@@ -448,6 +485,10 @@ func (port *InputPortUint) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortUint) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortUint) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -458,6 +499,7 @@ func (port *InputPortUint) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint)
 	return nil
 }
@@ -477,8 +519,9 @@ type OutputPortUint8 struct {
 
 type InputPortUint8 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value uint8
+	Mutex     sync.RWMutex
+	Value     uint8
+	PrevValue uint8
 }
 
 func NewOutputPortUint8() *OutputPortUint8 {
@@ -513,6 +556,10 @@ func (port *InputPortUint8) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortUint8) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortUint8) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -523,6 +570,7 @@ func (port *InputPortUint8) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint8)
 	return nil
 }
@@ -542,8 +590,9 @@ type OutputPortUint16 struct {
 
 type InputPortUint16 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value uint16
+	Mutex     sync.RWMutex
+	Value     uint16
+	PrevValue uint16
 }
 
 func NewOutputPortUint16() *OutputPortUint16 {
@@ -578,6 +627,10 @@ func (port *InputPortUint16) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortUint16) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortUint16) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -588,6 +641,7 @@ func (port *InputPortUint16) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint16)
 	return nil
 }
@@ -607,8 +661,9 @@ type OutputPortUint32 struct {
 
 type InputPortUint32 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value uint32
+	Mutex     sync.RWMutex
+	Value     uint32
+	PrevValue uint32
 }
 
 func NewOutputPortUint32() *OutputPortUint32 {
@@ -643,6 +698,10 @@ func (port *InputPortUint32) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortUint32) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortUint32) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -653,6 +712,7 @@ func (port *InputPortUint32) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint32)
 	return nil
 }
@@ -672,8 +732,9 @@ type OutputPortUint64 struct {
 
 type InputPortUint64 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value uint64
+	Mutex     sync.RWMutex
+	Value     uint64
+	PrevValue uint64
 }
 
 func NewOutputPortUint64() *OutputPortUint64 {
@@ -708,6 +769,10 @@ func (port *InputPortUint64) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortUint64) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortUint64) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -718,6 +783,7 @@ func (port *InputPortUint64) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint64)
 	return nil
 }
@@ -737,8 +803,9 @@ type OutputPortBool struct {
 
 type InputPortBool struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value bool
+	Mutex     sync.RWMutex
+	Value     bool
+	PrevValue bool
 }
 
 func NewOutputPortBool() *OutputPortBool {
@@ -773,6 +840,10 @@ func (port *InputPortBool) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortBool) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortBool) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -783,6 +854,7 @@ func (port *InputPortBool) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(bool)
 	return nil
 }
@@ -802,8 +874,9 @@ type OutputPortFloat32 struct {
 
 type InputPortFloat32 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value float32
+	Mutex     sync.RWMutex
+	Value     float32
+	PrevValue float32
 }
 
 func NewOutputPortFloat32() *OutputPortFloat32 {
@@ -838,6 +911,10 @@ func (port *InputPortFloat32) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortFloat32) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortFloat32) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -848,6 +925,7 @@ func (port *InputPortFloat32) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(float32)
 	return nil
 }
@@ -867,8 +945,9 @@ type OutputPortFloat64 struct {
 
 type InputPortFloat64 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value float64
+	Mutex     sync.RWMutex
+	Value     float64
+	PrevValue float64
 }
 
 func NewOutputPortFloat64() *OutputPortFloat64 {
@@ -903,6 +982,10 @@ func (port *InputPortFloat64) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortFloat64) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortFloat64) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -913,6 +996,7 @@ func (port *InputPortFloat64) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(float64)
 	return nil
 }

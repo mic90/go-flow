@@ -24,8 +24,9 @@ type ArrayOutputPortByte struct {
 
 type ArrayInputPortByte struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []byte
+	Mutex     sync.RWMutex
+	Value     []byte
+	PrevValue []byte
 }
 
 func NewArrayOutputPortByte() *ArrayOutputPortByte {
@@ -40,12 +41,14 @@ func NewArrayOutputPortByteLen(len int) *ArrayOutputPortByte {
 
 func NewArrayInputPortByte(requiredNew bool) *ArrayInputPortByte {
 	array := make([]byte, 10)
-	return &ArrayInputPortByte{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]byte, 10)
+	return &ArrayInputPortByte{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortByteLen(requiredNew bool, len int) *ArrayInputPortByte {
 	array := make([]byte, len)
-	return &ArrayInputPortByte{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]byte, len)
+	return &ArrayInputPortByte{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortByte) GetTimestamp() time.Time {
@@ -72,6 +75,15 @@ func (port *ArrayInputPortByte) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortByte) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortByte) read() interface{} {
@@ -95,6 +107,7 @@ func (port *ArrayInputPortByte) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]byte)
 	return nil
 }
@@ -114,8 +127,9 @@ type ArrayOutputPortInt struct {
 
 type ArrayInputPortInt struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []int
+	Mutex     sync.RWMutex
+	Value     []int
+	PrevValue []int
 }
 
 func NewArrayOutputPortInt() *ArrayOutputPortInt {
@@ -130,12 +144,14 @@ func NewArrayOutputPortIntLen(len int) *ArrayOutputPortInt {
 
 func NewArrayInputPortInt(requiredNew bool) *ArrayInputPortInt {
 	array := make([]int, 10)
-	return &ArrayInputPortInt{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int, 10)
+	return &ArrayInputPortInt{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortIntLen(requiredNew bool, len int) *ArrayInputPortInt {
 	array := make([]int, len)
-	return &ArrayInputPortInt{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int, len)
+	return &ArrayInputPortInt{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortInt) GetTimestamp() time.Time {
@@ -162,6 +178,15 @@ func (port *ArrayInputPortInt) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortInt) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortInt) read() interface{} {
@@ -185,6 +210,7 @@ func (port *ArrayInputPortInt) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int)
 	return nil
 }
@@ -204,8 +230,9 @@ type ArrayOutputPortInt8 struct {
 
 type ArrayInputPortInt8 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []int8
+	Mutex     sync.RWMutex
+	Value     []int8
+	PrevValue []int8
 }
 
 func NewArrayOutputPortInt8() *ArrayOutputPortInt8 {
@@ -220,12 +247,14 @@ func NewArrayOutputPortInt8Len(len int) *ArrayOutputPortInt8 {
 
 func NewArrayInputPortInt8(requiredNew bool) *ArrayInputPortInt8 {
 	array := make([]int8, 10)
-	return &ArrayInputPortInt8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int8, 10)
+	return &ArrayInputPortInt8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortInt8Len(requiredNew bool, len int) *ArrayInputPortInt8 {
 	array := make([]int8, len)
-	return &ArrayInputPortInt8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int8, len)
+	return &ArrayInputPortInt8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortInt8) GetTimestamp() time.Time {
@@ -252,6 +281,15 @@ func (port *ArrayInputPortInt8) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortInt8) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortInt8) read() interface{} {
@@ -275,6 +313,7 @@ func (port *ArrayInputPortInt8) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int8)
 	return nil
 }
@@ -294,8 +333,9 @@ type ArrayOutputPortInt16 struct {
 
 type ArrayInputPortInt16 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []int16
+	Mutex     sync.RWMutex
+	Value     []int16
+	PrevValue []int16
 }
 
 func NewArrayOutputPortInt16() *ArrayOutputPortInt16 {
@@ -310,12 +350,14 @@ func NewArrayOutputPortInt16Len(len int) *ArrayOutputPortInt16 {
 
 func NewArrayInputPortInt16(requiredNew bool) *ArrayInputPortInt16 {
 	array := make([]int16, 10)
-	return &ArrayInputPortInt16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int16, 10)
+	return &ArrayInputPortInt16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortInt16Len(requiredNew bool, len int) *ArrayInputPortInt16 {
 	array := make([]int16, len)
-	return &ArrayInputPortInt16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int16, len)
+	return &ArrayInputPortInt16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortInt16) GetTimestamp() time.Time {
@@ -342,6 +384,15 @@ func (port *ArrayInputPortInt16) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortInt16) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortInt16) read() interface{} {
@@ -365,6 +416,7 @@ func (port *ArrayInputPortInt16) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int16)
 	return nil
 }
@@ -384,8 +436,9 @@ type ArrayOutputPortInt32 struct {
 
 type ArrayInputPortInt32 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []int32
+	Mutex     sync.RWMutex
+	Value     []int32
+	PrevValue []int32
 }
 
 func NewArrayOutputPortInt32() *ArrayOutputPortInt32 {
@@ -400,12 +453,14 @@ func NewArrayOutputPortInt32Len(len int) *ArrayOutputPortInt32 {
 
 func NewArrayInputPortInt32(requiredNew bool) *ArrayInputPortInt32 {
 	array := make([]int32, 10)
-	return &ArrayInputPortInt32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int32, 10)
+	return &ArrayInputPortInt32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortInt32Len(requiredNew bool, len int) *ArrayInputPortInt32 {
 	array := make([]int32, len)
-	return &ArrayInputPortInt32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int32, len)
+	return &ArrayInputPortInt32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortInt32) GetTimestamp() time.Time {
@@ -432,6 +487,15 @@ func (port *ArrayInputPortInt32) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortInt32) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortInt32) read() interface{} {
@@ -455,6 +519,7 @@ func (port *ArrayInputPortInt32) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int32)
 	return nil
 }
@@ -474,8 +539,9 @@ type ArrayOutputPortInt64 struct {
 
 type ArrayInputPortInt64 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []int64
+	Mutex     sync.RWMutex
+	Value     []int64
+	PrevValue []int64
 }
 
 func NewArrayOutputPortInt64() *ArrayOutputPortInt64 {
@@ -490,12 +556,14 @@ func NewArrayOutputPortInt64Len(len int) *ArrayOutputPortInt64 {
 
 func NewArrayInputPortInt64(requiredNew bool) *ArrayInputPortInt64 {
 	array := make([]int64, 10)
-	return &ArrayInputPortInt64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int64, 10)
+	return &ArrayInputPortInt64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortInt64Len(requiredNew bool, len int) *ArrayInputPortInt64 {
 	array := make([]int64, len)
-	return &ArrayInputPortInt64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]int64, len)
+	return &ArrayInputPortInt64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortInt64) GetTimestamp() time.Time {
@@ -522,6 +590,15 @@ func (port *ArrayInputPortInt64) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortInt64) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortInt64) read() interface{} {
@@ -545,6 +622,7 @@ func (port *ArrayInputPortInt64) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int64)
 	return nil
 }
@@ -564,8 +642,9 @@ type ArrayOutputPortUint struct {
 
 type ArrayInputPortUint struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []uint
+	Mutex     sync.RWMutex
+	Value     []uint
+	PrevValue []uint
 }
 
 func NewArrayOutputPortUint() *ArrayOutputPortUint {
@@ -580,12 +659,14 @@ func NewArrayOutputPortUintLen(len int) *ArrayOutputPortUint {
 
 func NewArrayInputPortUint(requiredNew bool) *ArrayInputPortUint {
 	array := make([]uint, 10)
-	return &ArrayInputPortUint{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint, 10)
+	return &ArrayInputPortUint{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortUintLen(requiredNew bool, len int) *ArrayInputPortUint {
 	array := make([]uint, len)
-	return &ArrayInputPortUint{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint, len)
+	return &ArrayInputPortUint{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortUint) GetTimestamp() time.Time {
@@ -612,6 +693,15 @@ func (port *ArrayInputPortUint) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortUint) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortUint) read() interface{} {
@@ -635,6 +725,7 @@ func (port *ArrayInputPortUint) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint)
 	return nil
 }
@@ -654,8 +745,9 @@ type ArrayOutputPortUint8 struct {
 
 type ArrayInputPortUint8 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []uint8
+	Mutex     sync.RWMutex
+	Value     []uint8
+	PrevValue []uint8
 }
 
 func NewArrayOutputPortUint8() *ArrayOutputPortUint8 {
@@ -670,12 +762,14 @@ func NewArrayOutputPortUint8Len(len int) *ArrayOutputPortUint8 {
 
 func NewArrayInputPortUint8(requiredNew bool) *ArrayInputPortUint8 {
 	array := make([]uint8, 10)
-	return &ArrayInputPortUint8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint8, 10)
+	return &ArrayInputPortUint8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortUint8Len(requiredNew bool, len int) *ArrayInputPortUint8 {
 	array := make([]uint8, len)
-	return &ArrayInputPortUint8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint8, len)
+	return &ArrayInputPortUint8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortUint8) GetTimestamp() time.Time {
@@ -702,6 +796,15 @@ func (port *ArrayInputPortUint8) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortUint8) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortUint8) read() interface{} {
@@ -725,6 +828,7 @@ func (port *ArrayInputPortUint8) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint8)
 	return nil
 }
@@ -744,8 +848,9 @@ type ArrayOutputPortUint16 struct {
 
 type ArrayInputPortUint16 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []uint16
+	Mutex     sync.RWMutex
+	Value     []uint16
+	PrevValue []uint16
 }
 
 func NewArrayOutputPortUint16() *ArrayOutputPortUint16 {
@@ -760,12 +865,14 @@ func NewArrayOutputPortUint16Len(len int) *ArrayOutputPortUint16 {
 
 func NewArrayInputPortUint16(requiredNew bool) *ArrayInputPortUint16 {
 	array := make([]uint16, 10)
-	return &ArrayInputPortUint16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint16, 10)
+	return &ArrayInputPortUint16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortUint16Len(requiredNew bool, len int) *ArrayInputPortUint16 {
 	array := make([]uint16, len)
-	return &ArrayInputPortUint16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint16, len)
+	return &ArrayInputPortUint16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortUint16) GetTimestamp() time.Time {
@@ -792,6 +899,15 @@ func (port *ArrayInputPortUint16) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortUint16) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortUint16) read() interface{} {
@@ -815,6 +931,7 @@ func (port *ArrayInputPortUint16) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint16)
 	return nil
 }
@@ -834,8 +951,9 @@ type ArrayOutputPortUint32 struct {
 
 type ArrayInputPortUint32 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []uint32
+	Mutex     sync.RWMutex
+	Value     []uint32
+	PrevValue []uint32
 }
 
 func NewArrayOutputPortUint32() *ArrayOutputPortUint32 {
@@ -850,12 +968,14 @@ func NewArrayOutputPortUint32Len(len int) *ArrayOutputPortUint32 {
 
 func NewArrayInputPortUint32(requiredNew bool) *ArrayInputPortUint32 {
 	array := make([]uint32, 10)
-	return &ArrayInputPortUint32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint32, 10)
+	return &ArrayInputPortUint32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortUint32Len(requiredNew bool, len int) *ArrayInputPortUint32 {
 	array := make([]uint32, len)
-	return &ArrayInputPortUint32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint32, len)
+	return &ArrayInputPortUint32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortUint32) GetTimestamp() time.Time {
@@ -882,6 +1002,15 @@ func (port *ArrayInputPortUint32) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortUint32) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortUint32) read() interface{} {
@@ -905,6 +1034,7 @@ func (port *ArrayInputPortUint32) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint32)
 	return nil
 }
@@ -924,8 +1054,9 @@ type ArrayOutputPortUint64 struct {
 
 type ArrayInputPortUint64 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []uint64
+	Mutex     sync.RWMutex
+	Value     []uint64
+	PrevValue []uint64
 }
 
 func NewArrayOutputPortUint64() *ArrayOutputPortUint64 {
@@ -940,12 +1071,14 @@ func NewArrayOutputPortUint64Len(len int) *ArrayOutputPortUint64 {
 
 func NewArrayInputPortUint64(requiredNew bool) *ArrayInputPortUint64 {
 	array := make([]uint64, 10)
-	return &ArrayInputPortUint64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint64, 10)
+	return &ArrayInputPortUint64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortUint64Len(requiredNew bool, len int) *ArrayInputPortUint64 {
 	array := make([]uint64, len)
-	return &ArrayInputPortUint64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]uint64, len)
+	return &ArrayInputPortUint64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortUint64) GetTimestamp() time.Time {
@@ -972,6 +1105,15 @@ func (port *ArrayInputPortUint64) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortUint64) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortUint64) read() interface{} {
@@ -995,6 +1137,7 @@ func (port *ArrayInputPortUint64) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint64)
 	return nil
 }
@@ -1014,8 +1157,9 @@ type ArrayOutputPortBool struct {
 
 type ArrayInputPortBool struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []bool
+	Mutex     sync.RWMutex
+	Value     []bool
+	PrevValue []bool
 }
 
 func NewArrayOutputPortBool() *ArrayOutputPortBool {
@@ -1030,12 +1174,14 @@ func NewArrayOutputPortBoolLen(len int) *ArrayOutputPortBool {
 
 func NewArrayInputPortBool(requiredNew bool) *ArrayInputPortBool {
 	array := make([]bool, 10)
-	return &ArrayInputPortBool{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]bool, 10)
+	return &ArrayInputPortBool{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortBoolLen(requiredNew bool, len int) *ArrayInputPortBool {
 	array := make([]bool, len)
-	return &ArrayInputPortBool{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]bool, len)
+	return &ArrayInputPortBool{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortBool) GetTimestamp() time.Time {
@@ -1062,6 +1208,15 @@ func (port *ArrayInputPortBool) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortBool) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortBool) read() interface{} {
@@ -1085,6 +1240,7 @@ func (port *ArrayInputPortBool) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]bool)
 	return nil
 }
@@ -1104,8 +1260,9 @@ type ArrayOutputPortFloat32 struct {
 
 type ArrayInputPortFloat32 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []float32
+	Mutex     sync.RWMutex
+	Value     []float32
+	PrevValue []float32
 }
 
 func NewArrayOutputPortFloat32() *ArrayOutputPortFloat32 {
@@ -1120,12 +1277,14 @@ func NewArrayOutputPortFloat32Len(len int) *ArrayOutputPortFloat32 {
 
 func NewArrayInputPortFloat32(requiredNew bool) *ArrayInputPortFloat32 {
 	array := make([]float32, 10)
-	return &ArrayInputPortFloat32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]float32, 10)
+	return &ArrayInputPortFloat32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortFloat32Len(requiredNew bool, len int) *ArrayInputPortFloat32 {
 	array := make([]float32, len)
-	return &ArrayInputPortFloat32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]float32, len)
+	return &ArrayInputPortFloat32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortFloat32) GetTimestamp() time.Time {
@@ -1152,6 +1311,15 @@ func (port *ArrayInputPortFloat32) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortFloat32) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortFloat32) read() interface{} {
@@ -1175,6 +1343,7 @@ func (port *ArrayInputPortFloat32) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]float32)
 	return nil
 }
@@ -1194,8 +1363,9 @@ type ArrayOutputPortFloat64 struct {
 
 type ArrayInputPortFloat64 struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value []float64
+	Mutex     sync.RWMutex
+	Value     []float64
+	PrevValue []float64
 }
 
 func NewArrayOutputPortFloat64() *ArrayOutputPortFloat64 {
@@ -1210,12 +1380,14 @@ func NewArrayOutputPortFloat64Len(len int) *ArrayOutputPortFloat64 {
 
 func NewArrayInputPortFloat64(requiredNew bool) *ArrayInputPortFloat64 {
 	array := make([]float64, 10)
-	return &ArrayInputPortFloat64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]float64, 10)
+	return &ArrayInputPortFloat64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func NewArrayInputPortFloat64Len(requiredNew bool, len int) *ArrayInputPortFloat64 {
 	array := make([]float64, len)
-	return &ArrayInputPortFloat64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array}
+	prevArray := make([]float64, len)
+	return &ArrayInputPortFloat64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
 func (port *ArrayOutputPortFloat64) GetTimestamp() time.Time {
@@ -1242,6 +1414,15 @@ func (port *ArrayInputPortFloat64) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *ArrayInputPortFloat64) ValueChanged() bool {
+	for i, value := range port.Value {
+		if value != port.PrevValue[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // read will return value currently stored in port
 // Needed only for internal usage by graph
 func (port *ArrayOutputPortFloat64) read() interface{} {
@@ -1265,6 +1446,7 @@ func (port *ArrayInputPortFloat64) write(value interface{}) error {
 	}
 
 	valueOfValue := reflect.ValueOf(value)
+	copy(port.PrevValue, port.Value)
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]float64)
 	return nil
 }

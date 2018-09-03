@@ -18,8 +18,9 @@ type OutputPortValueType struct {
 
 type InputPortValueType struct {
 	InputPort
-	Mutex sync.RWMutex
-	Value ValueType
+	Mutex     sync.RWMutex
+	Value     ValueType
+	PrevValue ValueType
 }
 
 func NewOutputPortValueType() *OutputPortValueType {
@@ -54,6 +55,10 @@ func (port *InputPortValueType) IsRequiredNew() bool {
 	return port.RequiredNew
 }
 
+func (port *InputPortValueType) ValueChanged() bool {
+	return port.Value != port.PrevValue
+}
+
 func (port *InputPortValueType) write(value interface{}) error {
 	port.Mutex.Lock()
 	defer port.Mutex.Unlock()
@@ -64,6 +69,7 @@ func (port *InputPortValueType) write(value interface{}) error {
 		return fmt.Errorf("incompatible value types, given type: %v, could not be converted to: %v", typeOfValue, typeOfPortValue)
 	}
 	valueOfValue := reflect.ValueOf(value)
+	port.PrevValue = port.Value
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(ValueType)
 	return nil
 }
