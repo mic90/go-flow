@@ -2,20 +2,22 @@ package port
 
 import (
 	"github.com/mic90/go-flow/property"
+	"github.com/rs/xid"
 	"github.com/twinj/uuid"
-	"time"
 )
 
 type Connector interface {
 	IsInputBlocking() bool
+	IsInputBlockingDiff() bool
 	IsOutputNew() bool
+	IsInputDiff() bool
 	GetID() string
 	Trigger() error
 }
 
 type BaseConnector struct {
-	ID        string
-	Timestamp time.Time
+	ID       string
+	OutputID xid.ID
 }
 
 func (c BaseConnector) GetID() string {
@@ -24,26 +26,34 @@ func (c BaseConnector) GetID() string {
 
 type PortConnector struct {
 	BaseConnector
-	FromPort PortWriter
-	ToPort   PortReader
+	FromPort OutputPort
+	ToPort   InputPort
 }
 
-func NewPortConnector(fromPort PortWriter, toPort PortReader) *PortConnector {
+func NewPortConnector(fromPort OutputPort, toPort InputPort) *PortConnector {
 	id := uuid.NewV4().String()
-	timestamp := time.Now()
+	timestamp := xid.ID{}
 	return &PortConnector{BaseConnector{id, timestamp}, fromPort, toPort}
 }
 
 func (p *PortConnector) IsInputBlocking() bool {
-	return p.ToPort.IsRequiredNew()
+	return p.ToPort.IsBlockingNew()
+}
+
+func (p *PortConnector) IsInputBlockingDiff() bool {
+	return p.ToPort.IsBlockingDiff()
 }
 
 func (p *PortConnector) IsOutputNew() bool {
-	outputNew := p.FromPort.GetTimestamp().After(p.Timestamp)
+	outputNew := p.FromPort.GetID().Compare(p.OutputID) != 0
 	if outputNew {
-		p.Timestamp = p.FromPort.GetTimestamp()
+		p.OutputID = p.FromPort.GetID()
 	}
 	return outputNew
+}
+
+func (p *PortConnector) IsInputDiff() bool {
+	return p.ToPort.ValueChanged()
 }
 
 func (p *PortConnector) Trigger() error {
@@ -53,25 +63,33 @@ func (p *PortConnector) Trigger() error {
 type PropertyConnector struct {
 	BaseConnector
 	FromProperty property.PropertyReader
-	ToPort       PortReader
+	ToPort       InputPort
 }
 
-func NewPropertyConnector(property property.PropertyReader, toPort PortReader) *PropertyConnector {
+func NewPropertyConnector(property property.PropertyReader, toPort InputPort) *PropertyConnector {
 	id := uuid.NewV4().String()
-	timestamp := time.Now()
-	return &PropertyConnector{BaseConnector{id, timestamp}, property, toPort}
+	propertyID := xid.ID{}
+	return &PropertyConnector{BaseConnector{id, propertyID}, property, toPort}
 }
 
 func (p *PropertyConnector) IsInputBlocking() bool {
-	return p.ToPort.IsRequiredNew()
+	return p.ToPort.IsBlockingNew()
+}
+
+func (p *PropertyConnector) IsInputBlockingDiff() bool {
+	return p.ToPort.IsBlockingDiff()
 }
 
 func (p *PropertyConnector) IsOutputNew() bool {
-	propertyNew := p.FromProperty.(property.PropertyTimestampedReader).GetTimestamp().After(p.Timestamp)
+	propertyNew := p.FromProperty.(property.PropertyIDReader).GetID().Compare(p.OutputID) != 0
 	if propertyNew {
-		p.Timestamp = p.FromProperty.(property.PropertyTimestampedReader).GetTimestamp()
+		p.OutputID = p.FromProperty.(property.PropertyIDReader).GetID()
 	}
 	return propertyNew
+}
+
+func (p *PropertyConnector) IsInputDiff() bool {
+	return p.ToPort.ValueChanged()
 }
 
 func (p *PropertyConnector) Trigger() error {

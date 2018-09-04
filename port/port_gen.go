@@ -3,21 +3,21 @@ package port
 import (
 	"fmt"
 	"github.com/mauricelam/genny/generic"
+	"github.com/rs/xid"
 	"reflect"
 	"sync"
-	"time"
 )
 
 type ValueType generic.Type
 
 type OutputPortValueType struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value ValueType
 }
 
 type InputPortValueType struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     ValueType
 	PrevValue ValueType
@@ -27,12 +27,12 @@ func NewOutputPortValueType() *OutputPortValueType {
 	return &OutputPortValueType{Mutex: sync.RWMutex{}}
 }
 
-func NewInputPortValueType(requiredNew bool) *InputPortValueType {
-	return &InputPortValueType{Mutex: sync.RWMutex{}, InputPort: InputPort{RequiredNew: requiredNew}}
+func NewInputPortValueType(blockingType BlockingType) *InputPortValueType {
+	return &InputPortValueType{Mutex: sync.RWMutex{}, BaseInputPort: BaseInputPort{blockingType, false}}
 }
 
-func (port *OutputPortValueType) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *OutputPortValueType) GetID() xid.ID {
+	return port.id
 }
 
 func (port *OutputPortValueType) Write(value ValueType) error {
@@ -40,7 +40,7 @@ func (port *OutputPortValueType) Write(value ValueType) error {
 	defer port.Mutex.Unlock()
 
 	port.Value = value
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
@@ -51,12 +51,20 @@ func (port *OutputPortValueType) read() interface{} {
 	return port.Value
 }
 
-func (port *InputPortValueType) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *InputPortValueType) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *InputPortValueType) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *InputPortValueType) ValueChanged() bool {
 	return port.Value != port.PrevValue
+}
+
+func (port *InputPortValueType) ValueNew() bool {
+	return port.valueNew
 }
 
 func (port *InputPortValueType) write(value interface{}) error {
@@ -70,6 +78,7 @@ func (port *InputPortValueType) write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	port.PrevValue = port.Value
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().(ValueType)
 	return nil
 }
@@ -77,6 +86,9 @@ func (port *InputPortValueType) write(value interface{}) error {
 func (port *InputPortValueType) Read() ValueType {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
+
+	// reset value freshness on read
+	port.valueNew = false
 
 	return port.Value
 }

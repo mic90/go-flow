@@ -9,21 +9,21 @@ import (
 
 	"fmt"
 
+	"github.com/rs/xid"
+
 	"reflect"
 
 	"sync"
-
-	"time"
 )
 
 type ArrayOutputPortByte struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []byte
 }
 
 type ArrayInputPortByte struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []byte
 	PrevValue []byte
@@ -31,28 +31,28 @@ type ArrayInputPortByte struct {
 
 func NewArrayOutputPortByte() *ArrayOutputPortByte {
 	array := make([]byte, 10)
-	return &ArrayOutputPortByte{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortByte{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortByteLen(len int) *ArrayOutputPortByte {
 	array := make([]byte, len)
-	return &ArrayOutputPortByte{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortByte{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortByte(requiredNew bool) *ArrayInputPortByte {
+func NewArrayInputPortByte(blockingType BlockingType) *ArrayInputPortByte {
 	array := make([]byte, 10)
 	prevArray := make([]byte, 10)
-	return &ArrayInputPortByte{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortByte{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortByteLen(requiredNew bool, len int) *ArrayInputPortByte {
+func NewArrayInputPortByteLen(blockingType BlockingType, len int) *ArrayInputPortByte {
 	array := make([]byte, len)
 	prevArray := make([]byte, len)
-	return &ArrayInputPortByte{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortByte{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortByte) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortByte) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -67,12 +67,16 @@ func (port *ArrayOutputPortByte) Write(value []byte) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortByte) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortByte) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortByte) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortByte) ValueChanged() bool {
@@ -82,6 +86,10 @@ func (port *ArrayInputPortByte) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortByte) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -108,6 +116,7 @@ func (port *ArrayInputPortByte) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]byte)
 	return nil
 }
@@ -116,17 +125,20 @@ func (port *ArrayInputPortByte) Read() []byte {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortInt struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []int
 }
 
 type ArrayInputPortInt struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []int
 	PrevValue []int
@@ -134,28 +146,28 @@ type ArrayInputPortInt struct {
 
 func NewArrayOutputPortInt() *ArrayOutputPortInt {
 	array := make([]int, 10)
-	return &ArrayOutputPortInt{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortIntLen(len int) *ArrayOutputPortInt {
 	array := make([]int, len)
-	return &ArrayOutputPortInt{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortInt(requiredNew bool) *ArrayInputPortInt {
+func NewArrayInputPortInt(blockingType BlockingType) *ArrayInputPortInt {
 	array := make([]int, 10)
 	prevArray := make([]int, 10)
-	return &ArrayInputPortInt{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortIntLen(requiredNew bool, len int) *ArrayInputPortInt {
+func NewArrayInputPortIntLen(blockingType BlockingType, len int) *ArrayInputPortInt {
 	array := make([]int, len)
 	prevArray := make([]int, len)
-	return &ArrayInputPortInt{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortInt) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortInt) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -170,12 +182,16 @@ func (port *ArrayOutputPortInt) Write(value []int) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortInt) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortInt) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortInt) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortInt) ValueChanged() bool {
@@ -185,6 +201,10 @@ func (port *ArrayInputPortInt) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortInt) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -211,6 +231,7 @@ func (port *ArrayInputPortInt) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int)
 	return nil
 }
@@ -219,17 +240,20 @@ func (port *ArrayInputPortInt) Read() []int {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortInt8 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []int8
 }
 
 type ArrayInputPortInt8 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []int8
 	PrevValue []int8
@@ -237,28 +261,28 @@ type ArrayInputPortInt8 struct {
 
 func NewArrayOutputPortInt8() *ArrayOutputPortInt8 {
 	array := make([]int8, 10)
-	return &ArrayOutputPortInt8{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt8{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortInt8Len(len int) *ArrayOutputPortInt8 {
 	array := make([]int8, len)
-	return &ArrayOutputPortInt8{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt8{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortInt8(requiredNew bool) *ArrayInputPortInt8 {
+func NewArrayInputPortInt8(blockingType BlockingType) *ArrayInputPortInt8 {
 	array := make([]int8, 10)
 	prevArray := make([]int8, 10)
-	return &ArrayInputPortInt8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt8{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortInt8Len(requiredNew bool, len int) *ArrayInputPortInt8 {
+func NewArrayInputPortInt8Len(blockingType BlockingType, len int) *ArrayInputPortInt8 {
 	array := make([]int8, len)
 	prevArray := make([]int8, len)
-	return &ArrayInputPortInt8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt8{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortInt8) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortInt8) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -273,12 +297,16 @@ func (port *ArrayOutputPortInt8) Write(value []int8) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortInt8) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortInt8) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortInt8) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortInt8) ValueChanged() bool {
@@ -288,6 +316,10 @@ func (port *ArrayInputPortInt8) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortInt8) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -314,6 +346,7 @@ func (port *ArrayInputPortInt8) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int8)
 	return nil
 }
@@ -322,17 +355,20 @@ func (port *ArrayInputPortInt8) Read() []int8 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortInt16 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []int16
 }
 
 type ArrayInputPortInt16 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []int16
 	PrevValue []int16
@@ -340,28 +376,28 @@ type ArrayInputPortInt16 struct {
 
 func NewArrayOutputPortInt16() *ArrayOutputPortInt16 {
 	array := make([]int16, 10)
-	return &ArrayOutputPortInt16{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt16{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortInt16Len(len int) *ArrayOutputPortInt16 {
 	array := make([]int16, len)
-	return &ArrayOutputPortInt16{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt16{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortInt16(requiredNew bool) *ArrayInputPortInt16 {
+func NewArrayInputPortInt16(blockingType BlockingType) *ArrayInputPortInt16 {
 	array := make([]int16, 10)
 	prevArray := make([]int16, 10)
-	return &ArrayInputPortInt16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt16{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortInt16Len(requiredNew bool, len int) *ArrayInputPortInt16 {
+func NewArrayInputPortInt16Len(blockingType BlockingType, len int) *ArrayInputPortInt16 {
 	array := make([]int16, len)
 	prevArray := make([]int16, len)
-	return &ArrayInputPortInt16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt16{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortInt16) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortInt16) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -376,12 +412,16 @@ func (port *ArrayOutputPortInt16) Write(value []int16) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortInt16) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortInt16) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortInt16) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortInt16) ValueChanged() bool {
@@ -391,6 +431,10 @@ func (port *ArrayInputPortInt16) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortInt16) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -417,6 +461,7 @@ func (port *ArrayInputPortInt16) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int16)
 	return nil
 }
@@ -425,17 +470,20 @@ func (port *ArrayInputPortInt16) Read() []int16 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortInt32 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []int32
 }
 
 type ArrayInputPortInt32 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []int32
 	PrevValue []int32
@@ -443,28 +491,28 @@ type ArrayInputPortInt32 struct {
 
 func NewArrayOutputPortInt32() *ArrayOutputPortInt32 {
 	array := make([]int32, 10)
-	return &ArrayOutputPortInt32{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt32{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortInt32Len(len int) *ArrayOutputPortInt32 {
 	array := make([]int32, len)
-	return &ArrayOutputPortInt32{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt32{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortInt32(requiredNew bool) *ArrayInputPortInt32 {
+func NewArrayInputPortInt32(blockingType BlockingType) *ArrayInputPortInt32 {
 	array := make([]int32, 10)
 	prevArray := make([]int32, 10)
-	return &ArrayInputPortInt32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt32{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortInt32Len(requiredNew bool, len int) *ArrayInputPortInt32 {
+func NewArrayInputPortInt32Len(blockingType BlockingType, len int) *ArrayInputPortInt32 {
 	array := make([]int32, len)
 	prevArray := make([]int32, len)
-	return &ArrayInputPortInt32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt32{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortInt32) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortInt32) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -479,12 +527,16 @@ func (port *ArrayOutputPortInt32) Write(value []int32) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortInt32) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortInt32) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortInt32) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortInt32) ValueChanged() bool {
@@ -494,6 +546,10 @@ func (port *ArrayInputPortInt32) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortInt32) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -520,6 +576,7 @@ func (port *ArrayInputPortInt32) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int32)
 	return nil
 }
@@ -528,17 +585,20 @@ func (port *ArrayInputPortInt32) Read() []int32 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortInt64 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []int64
 }
 
 type ArrayInputPortInt64 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []int64
 	PrevValue []int64
@@ -546,28 +606,28 @@ type ArrayInputPortInt64 struct {
 
 func NewArrayOutputPortInt64() *ArrayOutputPortInt64 {
 	array := make([]int64, 10)
-	return &ArrayOutputPortInt64{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt64{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortInt64Len(len int) *ArrayOutputPortInt64 {
 	array := make([]int64, len)
-	return &ArrayOutputPortInt64{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortInt64{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortInt64(requiredNew bool) *ArrayInputPortInt64 {
+func NewArrayInputPortInt64(blockingType BlockingType) *ArrayInputPortInt64 {
 	array := make([]int64, 10)
 	prevArray := make([]int64, 10)
-	return &ArrayInputPortInt64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt64{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortInt64Len(requiredNew bool, len int) *ArrayInputPortInt64 {
+func NewArrayInputPortInt64Len(blockingType BlockingType, len int) *ArrayInputPortInt64 {
 	array := make([]int64, len)
 	prevArray := make([]int64, len)
-	return &ArrayInputPortInt64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortInt64{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortInt64) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortInt64) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -582,12 +642,16 @@ func (port *ArrayOutputPortInt64) Write(value []int64) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortInt64) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortInt64) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortInt64) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortInt64) ValueChanged() bool {
@@ -597,6 +661,10 @@ func (port *ArrayInputPortInt64) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortInt64) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -623,6 +691,7 @@ func (port *ArrayInputPortInt64) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]int64)
 	return nil
 }
@@ -631,17 +700,20 @@ func (port *ArrayInputPortInt64) Read() []int64 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortUint struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []uint
 }
 
 type ArrayInputPortUint struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []uint
 	PrevValue []uint
@@ -649,28 +721,28 @@ type ArrayInputPortUint struct {
 
 func NewArrayOutputPortUint() *ArrayOutputPortUint {
 	array := make([]uint, 10)
-	return &ArrayOutputPortUint{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortUintLen(len int) *ArrayOutputPortUint {
 	array := make([]uint, len)
-	return &ArrayOutputPortUint{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortUint(requiredNew bool) *ArrayInputPortUint {
+func NewArrayInputPortUint(blockingType BlockingType) *ArrayInputPortUint {
 	array := make([]uint, 10)
 	prevArray := make([]uint, 10)
-	return &ArrayInputPortUint{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortUintLen(requiredNew bool, len int) *ArrayInputPortUint {
+func NewArrayInputPortUintLen(blockingType BlockingType, len int) *ArrayInputPortUint {
 	array := make([]uint, len)
 	prevArray := make([]uint, len)
-	return &ArrayInputPortUint{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortUint) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortUint) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -685,12 +757,16 @@ func (port *ArrayOutputPortUint) Write(value []uint) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortUint) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortUint) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortUint) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortUint) ValueChanged() bool {
@@ -700,6 +776,10 @@ func (port *ArrayInputPortUint) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortUint) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -726,6 +806,7 @@ func (port *ArrayInputPortUint) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint)
 	return nil
 }
@@ -734,17 +815,20 @@ func (port *ArrayInputPortUint) Read() []uint {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortUint8 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []uint8
 }
 
 type ArrayInputPortUint8 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []uint8
 	PrevValue []uint8
@@ -752,28 +836,28 @@ type ArrayInputPortUint8 struct {
 
 func NewArrayOutputPortUint8() *ArrayOutputPortUint8 {
 	array := make([]uint8, 10)
-	return &ArrayOutputPortUint8{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint8{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortUint8Len(len int) *ArrayOutputPortUint8 {
 	array := make([]uint8, len)
-	return &ArrayOutputPortUint8{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint8{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortUint8(requiredNew bool) *ArrayInputPortUint8 {
+func NewArrayInputPortUint8(blockingType BlockingType) *ArrayInputPortUint8 {
 	array := make([]uint8, 10)
 	prevArray := make([]uint8, 10)
-	return &ArrayInputPortUint8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint8{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortUint8Len(requiredNew bool, len int) *ArrayInputPortUint8 {
+func NewArrayInputPortUint8Len(blockingType BlockingType, len int) *ArrayInputPortUint8 {
 	array := make([]uint8, len)
 	prevArray := make([]uint8, len)
-	return &ArrayInputPortUint8{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint8{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortUint8) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortUint8) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -788,12 +872,16 @@ func (port *ArrayOutputPortUint8) Write(value []uint8) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortUint8) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortUint8) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortUint8) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortUint8) ValueChanged() bool {
@@ -803,6 +891,10 @@ func (port *ArrayInputPortUint8) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortUint8) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -829,6 +921,7 @@ func (port *ArrayInputPortUint8) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint8)
 	return nil
 }
@@ -837,17 +930,20 @@ func (port *ArrayInputPortUint8) Read() []uint8 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortUint16 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []uint16
 }
 
 type ArrayInputPortUint16 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []uint16
 	PrevValue []uint16
@@ -855,28 +951,28 @@ type ArrayInputPortUint16 struct {
 
 func NewArrayOutputPortUint16() *ArrayOutputPortUint16 {
 	array := make([]uint16, 10)
-	return &ArrayOutputPortUint16{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint16{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortUint16Len(len int) *ArrayOutputPortUint16 {
 	array := make([]uint16, len)
-	return &ArrayOutputPortUint16{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint16{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortUint16(requiredNew bool) *ArrayInputPortUint16 {
+func NewArrayInputPortUint16(blockingType BlockingType) *ArrayInputPortUint16 {
 	array := make([]uint16, 10)
 	prevArray := make([]uint16, 10)
-	return &ArrayInputPortUint16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint16{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortUint16Len(requiredNew bool, len int) *ArrayInputPortUint16 {
+func NewArrayInputPortUint16Len(blockingType BlockingType, len int) *ArrayInputPortUint16 {
 	array := make([]uint16, len)
 	prevArray := make([]uint16, len)
-	return &ArrayInputPortUint16{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint16{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortUint16) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortUint16) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -891,12 +987,16 @@ func (port *ArrayOutputPortUint16) Write(value []uint16) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortUint16) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortUint16) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortUint16) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortUint16) ValueChanged() bool {
@@ -906,6 +1006,10 @@ func (port *ArrayInputPortUint16) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortUint16) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -932,6 +1036,7 @@ func (port *ArrayInputPortUint16) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint16)
 	return nil
 }
@@ -940,17 +1045,20 @@ func (port *ArrayInputPortUint16) Read() []uint16 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortUint32 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []uint32
 }
 
 type ArrayInputPortUint32 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []uint32
 	PrevValue []uint32
@@ -958,28 +1066,28 @@ type ArrayInputPortUint32 struct {
 
 func NewArrayOutputPortUint32() *ArrayOutputPortUint32 {
 	array := make([]uint32, 10)
-	return &ArrayOutputPortUint32{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint32{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortUint32Len(len int) *ArrayOutputPortUint32 {
 	array := make([]uint32, len)
-	return &ArrayOutputPortUint32{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint32{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortUint32(requiredNew bool) *ArrayInputPortUint32 {
+func NewArrayInputPortUint32(blockingType BlockingType) *ArrayInputPortUint32 {
 	array := make([]uint32, 10)
 	prevArray := make([]uint32, 10)
-	return &ArrayInputPortUint32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint32{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortUint32Len(requiredNew bool, len int) *ArrayInputPortUint32 {
+func NewArrayInputPortUint32Len(blockingType BlockingType, len int) *ArrayInputPortUint32 {
 	array := make([]uint32, len)
 	prevArray := make([]uint32, len)
-	return &ArrayInputPortUint32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint32{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortUint32) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortUint32) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -994,12 +1102,16 @@ func (port *ArrayOutputPortUint32) Write(value []uint32) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortUint32) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortUint32) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortUint32) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortUint32) ValueChanged() bool {
@@ -1009,6 +1121,10 @@ func (port *ArrayInputPortUint32) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortUint32) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -1035,6 +1151,7 @@ func (port *ArrayInputPortUint32) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint32)
 	return nil
 }
@@ -1043,17 +1160,20 @@ func (port *ArrayInputPortUint32) Read() []uint32 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortUint64 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []uint64
 }
 
 type ArrayInputPortUint64 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []uint64
 	PrevValue []uint64
@@ -1061,28 +1181,28 @@ type ArrayInputPortUint64 struct {
 
 func NewArrayOutputPortUint64() *ArrayOutputPortUint64 {
 	array := make([]uint64, 10)
-	return &ArrayOutputPortUint64{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint64{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortUint64Len(len int) *ArrayOutputPortUint64 {
 	array := make([]uint64, len)
-	return &ArrayOutputPortUint64{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortUint64{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortUint64(requiredNew bool) *ArrayInputPortUint64 {
+func NewArrayInputPortUint64(blockingType BlockingType) *ArrayInputPortUint64 {
 	array := make([]uint64, 10)
 	prevArray := make([]uint64, 10)
-	return &ArrayInputPortUint64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint64{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortUint64Len(requiredNew bool, len int) *ArrayInputPortUint64 {
+func NewArrayInputPortUint64Len(blockingType BlockingType, len int) *ArrayInputPortUint64 {
 	array := make([]uint64, len)
 	prevArray := make([]uint64, len)
-	return &ArrayInputPortUint64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortUint64{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortUint64) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortUint64) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -1097,12 +1217,16 @@ func (port *ArrayOutputPortUint64) Write(value []uint64) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortUint64) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortUint64) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortUint64) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortUint64) ValueChanged() bool {
@@ -1112,6 +1236,10 @@ func (port *ArrayInputPortUint64) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortUint64) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -1138,6 +1266,7 @@ func (port *ArrayInputPortUint64) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]uint64)
 	return nil
 }
@@ -1146,17 +1275,20 @@ func (port *ArrayInputPortUint64) Read() []uint64 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortBool struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []bool
 }
 
 type ArrayInputPortBool struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []bool
 	PrevValue []bool
@@ -1164,28 +1296,28 @@ type ArrayInputPortBool struct {
 
 func NewArrayOutputPortBool() *ArrayOutputPortBool {
 	array := make([]bool, 10)
-	return &ArrayOutputPortBool{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortBool{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortBoolLen(len int) *ArrayOutputPortBool {
 	array := make([]bool, len)
-	return &ArrayOutputPortBool{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortBool{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortBool(requiredNew bool) *ArrayInputPortBool {
+func NewArrayInputPortBool(blockingType BlockingType) *ArrayInputPortBool {
 	array := make([]bool, 10)
 	prevArray := make([]bool, 10)
-	return &ArrayInputPortBool{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortBool{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortBoolLen(requiredNew bool, len int) *ArrayInputPortBool {
+func NewArrayInputPortBoolLen(blockingType BlockingType, len int) *ArrayInputPortBool {
 	array := make([]bool, len)
 	prevArray := make([]bool, len)
-	return &ArrayInputPortBool{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortBool{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortBool) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortBool) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -1200,12 +1332,16 @@ func (port *ArrayOutputPortBool) Write(value []bool) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortBool) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortBool) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortBool) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortBool) ValueChanged() bool {
@@ -1215,6 +1351,10 @@ func (port *ArrayInputPortBool) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortBool) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -1241,6 +1381,7 @@ func (port *ArrayInputPortBool) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]bool)
 	return nil
 }
@@ -1249,17 +1390,20 @@ func (port *ArrayInputPortBool) Read() []bool {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortFloat32 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []float32
 }
 
 type ArrayInputPortFloat32 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []float32
 	PrevValue []float32
@@ -1267,28 +1411,28 @@ type ArrayInputPortFloat32 struct {
 
 func NewArrayOutputPortFloat32() *ArrayOutputPortFloat32 {
 	array := make([]float32, 10)
-	return &ArrayOutputPortFloat32{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortFloat32{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortFloat32Len(len int) *ArrayOutputPortFloat32 {
 	array := make([]float32, len)
-	return &ArrayOutputPortFloat32{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortFloat32{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortFloat32(requiredNew bool) *ArrayInputPortFloat32 {
+func NewArrayInputPortFloat32(blockingType BlockingType) *ArrayInputPortFloat32 {
 	array := make([]float32, 10)
 	prevArray := make([]float32, 10)
-	return &ArrayInputPortFloat32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortFloat32{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortFloat32Len(requiredNew bool, len int) *ArrayInputPortFloat32 {
+func NewArrayInputPortFloat32Len(blockingType BlockingType, len int) *ArrayInputPortFloat32 {
 	array := make([]float32, len)
 	prevArray := make([]float32, len)
-	return &ArrayInputPortFloat32{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortFloat32{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortFloat32) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortFloat32) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -1303,12 +1447,16 @@ func (port *ArrayOutputPortFloat32) Write(value []float32) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortFloat32) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortFloat32) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortFloat32) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortFloat32) ValueChanged() bool {
@@ -1318,6 +1466,10 @@ func (port *ArrayInputPortFloat32) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortFloat32) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -1344,6 +1496,7 @@ func (port *ArrayInputPortFloat32) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]float32)
 	return nil
 }
@@ -1352,17 +1505,20 @@ func (port *ArrayInputPortFloat32) Read() []float32 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
 
+	// reset value freshness on read
+	port.valueNew = false
+
 	return port.Value
 }
 
 type ArrayOutputPortFloat64 struct {
-	OutputPort
+	BaseOutputPort
 	Mutex sync.RWMutex
 	Value []float64
 }
 
 type ArrayInputPortFloat64 struct {
-	InputPort
+	BaseInputPort
 	Mutex     sync.RWMutex
 	Value     []float64
 	PrevValue []float64
@@ -1370,28 +1526,28 @@ type ArrayInputPortFloat64 struct {
 
 func NewArrayOutputPortFloat64() *ArrayOutputPortFloat64 {
 	array := make([]float64, 10)
-	return &ArrayOutputPortFloat64{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortFloat64{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
 func NewArrayOutputPortFloat64Len(len int) *ArrayOutputPortFloat64 {
 	array := make([]float64, len)
-	return &ArrayOutputPortFloat64{OutputPort: OutputPort{}, Mutex: sync.RWMutex{}, Value: array}
+	return &ArrayOutputPortFloat64{BaseOutputPort: BaseOutputPort{}, Mutex: sync.RWMutex{}, Value: array}
 }
 
-func NewArrayInputPortFloat64(requiredNew bool) *ArrayInputPortFloat64 {
+func NewArrayInputPortFloat64(blockingType BlockingType) *ArrayInputPortFloat64 {
 	array := make([]float64, 10)
 	prevArray := make([]float64, 10)
-	return &ArrayInputPortFloat64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortFloat64{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func NewArrayInputPortFloat64Len(requiredNew bool, len int) *ArrayInputPortFloat64 {
+func NewArrayInputPortFloat64Len(blockingType BlockingType, len int) *ArrayInputPortFloat64 {
 	array := make([]float64, len)
 	prevArray := make([]float64, len)
-	return &ArrayInputPortFloat64{InputPort: InputPort{RequiredNew: requiredNew}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
+	return &ArrayInputPortFloat64{BaseInputPort: BaseInputPort{blockingType, false}, Mutex: sync.RWMutex{}, Value: array, PrevValue: prevArray}
 }
 
-func (port *ArrayOutputPortFloat64) GetTimestamp() time.Time {
-	return port.Timestamp
+func (port *ArrayOutputPortFloat64) GetID() xid.ID {
+	return port.id
 }
 
 // Write will write input slice value into the current port
@@ -1406,12 +1562,16 @@ func (port *ArrayOutputPortFloat64) Write(value []float64) error {
 	}
 
 	copy(port.Value, value)
-	port.Timestamp = time.Now()
+	port.id = xid.New()
 	return nil
 }
 
-func (port *ArrayInputPortFloat64) IsRequiredNew() bool {
-	return port.RequiredNew
+func (port *ArrayInputPortFloat64) IsBlockingNew() bool {
+	return port.blockingType == PortBlockingNew
+}
+
+func (port *ArrayInputPortFloat64) IsBlockingDiff() bool {
+	return port.blockingType == PortBlockingDiff
 }
 
 func (port *ArrayInputPortFloat64) ValueChanged() bool {
@@ -1421,6 +1581,10 @@ func (port *ArrayInputPortFloat64) ValueChanged() bool {
 		}
 	}
 	return false
+}
+
+func (port *ArrayInputPortFloat64) ValueNew() bool {
+	return port.valueNew
 }
 
 // read will return value currently stored in port
@@ -1447,6 +1611,7 @@ func (port *ArrayInputPortFloat64) write(value interface{}) error {
 
 	valueOfValue := reflect.ValueOf(value)
 	copy(port.PrevValue, port.Value)
+	port.valueNew = true
 	port.Value = valueOfValue.Convert(typeOfPortValue).Interface().([]float64)
 	return nil
 }
@@ -1454,6 +1619,9 @@ func (port *ArrayInputPortFloat64) write(value interface{}) error {
 func (port *ArrayInputPortFloat64) Read() []float64 {
 	port.Mutex.RLock()
 	defer port.Mutex.RUnlock()
+
+	// reset value freshness on read
+	port.valueNew = false
 
 	return port.Value
 }

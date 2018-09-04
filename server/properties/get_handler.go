@@ -25,11 +25,11 @@ func (h *getPropertyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
-	timestamp, err := h.properties.GetTimestamp(propertyNameLower)
+	id, err := h.properties.GetID(propertyNameLower)
 	if err != nil {
 		resp.WriteHeader(http.StatusBadRequest)
 	}
-	response := valueResponse{propertyNameLower, value, timestamp.Format("2006-01-02T15:04:05Z07:00")}
+	response := valueResponse{propertyNameLower, value, *id}
 	err = json.NewEncoder(resp).Encode(response)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)

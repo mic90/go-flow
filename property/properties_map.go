@@ -2,15 +2,15 @@ package property
 
 import (
 	"fmt"
+	"github.com/rs/xid"
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 )
 
 type PropertyMapReader interface {
 	Read(propertyName string) (interface{}, error)
-	GetTimestamp(propertyName string) (*time.Time, error)
+	GetID(propertyName string) (*xid.ID, error)
 }
 
 type PropertyMapWriter interface {
@@ -23,20 +23,20 @@ type PropertyMapReaderWriter interface {
 }
 
 type PropertiesMap struct {
-	propertiesMapMutex sync.RWMutex                             `json:"-"`
-	PropertiesMap      map[string]PropertyTimestampReaderWriter `json:"properties"`
+	propertiesMapMutex sync.RWMutex                      `json:"-"`
+	PropertiesMap      map[string]PropertyIDReaderWriter `json:"properties"`
 }
 
 func NewPropertiesMap(properties ...interface{}) *PropertiesMap {
-	propertyType := reflect.TypeOf((*PropertyTimestampReaderWriter)(nil)).Elem()
-	finalPropertiesMap := make(map[string]PropertyTimestampReaderWriter)
+	propertyType := reflect.TypeOf((*PropertyIDReaderWriter)(nil)).Elem()
+	finalPropertiesMap := make(map[string]PropertyIDReaderWriter)
 	for _, propertiesObj := range properties {
 		objectType := reflect.TypeOf(propertiesObj).Elem()
 		if objectType.Kind() != reflect.Struct {
 			//TODO: do something maybe return some error ?
 			continue
 		}
-		propertiesMap := structFieldsToMap(propertiesObj, propertyType).(map[string]PropertyTimestampReaderWriter)
+		propertiesMap := structFieldsToMap(propertiesObj, propertyType).(map[string]PropertyIDReaderWriter)
 		// write all struct field into map by field name
 		for k, v := range propertiesMap {
 			lowerCaseName := strings.ToLower(k)
@@ -69,14 +69,14 @@ func (propc *PropertiesMap) Read(name string) (interface{}, error) {
 	return property.Read(), nil
 }
 
-func (propc *PropertiesMap) GetTimestamp(name string) (*time.Time, error) {
+func (propc *PropertiesMap) GetID(name string) (*xid.ID, error) {
 	propc.propertiesMapMutex.Lock()
 	defer propc.propertiesMapMutex.Unlock()
 	property, ok := propc.PropertiesMap[name]
 	if !ok {
 		return nil, fmt.Errorf("no property with name %s was found", name)
 	}
-	propertyTime := property.GetTimestamp()
+	propertyTime := property.GetID()
 	return &propertyTime, nil
 }
 

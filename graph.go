@@ -169,22 +169,23 @@ func (graph *Graph) startNode(node Node) {
 			// if inputs is required to be new before processing is run
 			// wait for the writer node to write some new value to its output port
 			if conn.IsInputBlocking() {
-				for {
-					if conn.IsOutputNew() {
-						break
-					}
-					if graph.Stop.Load().(bool) == true {
-						break
-					}
-					time.Sleep(1 * time.Millisecond)
+				err := graph.waitForOutputNew(conn)
+				if err != nil {
+					break
+				}
+			} else if conn.IsInputBlockingDiff() {
+				err := graph.waitForOutputDiff(conn)
+				if err != nil {
+					break
+				}
+			} else {
+				err := conn.Trigger()
+				if err != nil {
+					graph.setError(err)
+					break
 				}
 			}
 
-			err := conn.Trigger()
-			if err != nil {
-				graph.setError(err)
-				break
-			}
 		}
 
 		// stop processing loop, double check in case output->input write went wrong
@@ -201,8 +202,53 @@ func (graph *Graph) startNode(node Node) {
 	log.Println("Stopped node:", node.GetName(), node.GetID())
 }
 
-func (graph *Graph) getNodeInputPort(nodeId, portName string) (port.PortReader, error) {
-	readerType := reflect.TypeOf((*port.PortReader)(nil)).Elem()
+func (graph *Graph) waitForOutputDiff(conn port.Connector) error {
+	for {
+		// wait for any new value to appear on source
+		err := graph.waitForOutputNew(conn)
+		if err != nil {
+			return err
+		}
+		// pass new value to destination port
+		err = conn.Trigger()
+		if err != nil {
+			graph.setError(err)
+			return err
+		}
+		// if destination port value has changed, break the loop
+		if conn.IsInputDiff() {
+			break
+		}
+
+		if graph.Stop.Load().(bool) == true {
+			break
+		}
+		time.Sleep(1 * time.Millisecond)
+	}
+	return nil
+}
+
+
+func (graph *Graph) waitForOutputNew(conn port.Connector) error {
+	for {
+		if conn.IsOutputNew() {
+			break
+		}
+		if graph.Stop.Load().(bool) == true {
+			break
+		}
+		time.Sleep(1 * time.Millisecond)
+	}
+	err := conn.Trigger()
+	if err != nil {
+		graph.setError(err)
+		return err
+	}
+	return nil
+}
+
+func (graph *Graph) getNodeInputPort(nodeId, portName string) (port.InputPort, error) {
+	readerType := reflect.TypeOf((*port.InputPort)(nil)).Elem()
 	node := graph.Nodes[nodeId]
 
 	// read node ports into map by name
@@ -214,14 +260,14 @@ func (graph *Graph) getNodeInputPort(nodeId, portName string) (port.PortReader, 
 		}
 		isReader := nodeValue.Field(i).Type().Implements(readerType)
 		if isReader {
-			return nodeValue.Field(i).Interface().(port.PortReader), nil
+			return nodeValue.Field(i).Interface().(port.InputPort), nil
 		}
 	}
 	return nil, errors.New("unable to find input port")
 }
 
-func (graph *Graph) getNodeOutputPort(nodeId, portName string) (port.PortWriter, error) {
-	writerType := reflect.TypeOf((*port.PortWriter)(nil)).Elem()
+func (graph *Graph) getNodeOutputPort(nodeId, portName string) (port.OutputPort, error) {
+	writerType := reflect.TypeOf((*port.OutputPort)(nil)).Elem()
 	node := graph.Nodes[nodeId]
 
 	// read node ports into map by name
@@ -233,7 +279,7 @@ func (graph *Graph) getNodeOutputPort(nodeId, portName string) (port.PortWriter,
 		}
 		isWriter := nodeValue.Field(i).Type().Implements(writerType)
 		if isWriter {
-			return nodeValue.Field(i).Interface().(port.PortWriter), nil
+			return nodeValue.Field(i).Interface().(port.OutputPort), nil
 		}
 		return nil, errors.New("given port is not an output port")
 	}

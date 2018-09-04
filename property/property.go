@@ -1,10 +1,12 @@
 package property
 
-import "time"
+import (
+	"github.com/rs/xid"
+)
 
-type PropertyTimestampedReader interface {
+type PropertyIDReader interface {
 	PropertyReader
-	GetTimestamp() time.Time
+	GetID() xid.ID
 }
 
 type PropertyReader interface {
@@ -20,7 +22,7 @@ type PropertyReaderWriter interface {
 	PropertyWriter
 }
 
-type PropertyTimestampReaderWriter interface {
-	PropertyTimestampedReader
+type PropertyIDReaderWriter interface {
+	PropertyIDReader
 	PropertyWriter
 }

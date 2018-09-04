@@ -7,11 +7,11 @@ package property
 import (
 	"fmt"
 
+	"github.com/rs/xid"
+
 	"reflect"
 
 	"sync"
-
-	"time"
 )
 
 type PropertyByte struct {
@@ -23,13 +23,13 @@ type PropertyByte struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyByte(description string, defaultValue byte, min, max int, readOnly, userVisible bool, unit string) *PropertyByte {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyByte{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyByte{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyByteRW(description string, defaultValue byte, min, max int, userVisible bool, unit string) *PropertyByte {
@@ -60,7 +60,7 @@ func (prop *PropertyByte) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(byte)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -69,7 +69,7 @@ func (prop *PropertyByte) WriteByte(value byte) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyByte) Read() interface{} {
@@ -86,11 +86,11 @@ func (prop *PropertyByte) ReadByte() byte {
 	return prop.Value
 }
 
-func (prop *PropertyByte) GetTimestamp() time.Time {
+func (prop *PropertyByte) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyInt struct {
@@ -102,13 +102,13 @@ type PropertyInt struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyInt(description string, defaultValue int, min, max int, readOnly, userVisible bool, unit string) *PropertyInt {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyInt{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyInt{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyIntRW(description string, defaultValue int, min, max int, userVisible bool, unit string) *PropertyInt {
@@ -139,7 +139,7 @@ func (prop *PropertyInt) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -148,7 +148,7 @@ func (prop *PropertyInt) WriteInt(value int) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyInt) Read() interface{} {
@@ -165,11 +165,11 @@ func (prop *PropertyInt) ReadInt() int {
 	return prop.Value
 }
 
-func (prop *PropertyInt) GetTimestamp() time.Time {
+func (prop *PropertyInt) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyInt8 struct {
@@ -181,13 +181,13 @@ type PropertyInt8 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyInt8(description string, defaultValue int8, min, max int, readOnly, userVisible bool, unit string) *PropertyInt8 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyInt8{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyInt8{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyInt8RW(description string, defaultValue int8, min, max int, userVisible bool, unit string) *PropertyInt8 {
@@ -218,7 +218,7 @@ func (prop *PropertyInt8) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int8)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -227,7 +227,7 @@ func (prop *PropertyInt8) WriteInt8(value int8) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyInt8) Read() interface{} {
@@ -244,11 +244,11 @@ func (prop *PropertyInt8) ReadInt8() int8 {
 	return prop.Value
 }
 
-func (prop *PropertyInt8) GetTimestamp() time.Time {
+func (prop *PropertyInt8) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyInt16 struct {
@@ -260,13 +260,13 @@ type PropertyInt16 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyInt16(description string, defaultValue int16, min, max int, readOnly, userVisible bool, unit string) *PropertyInt16 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyInt16{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyInt16{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyInt16RW(description string, defaultValue int16, min, max int, userVisible bool, unit string) *PropertyInt16 {
@@ -297,7 +297,7 @@ func (prop *PropertyInt16) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int16)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -306,7 +306,7 @@ func (prop *PropertyInt16) WriteInt16(value int16) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyInt16) Read() interface{} {
@@ -323,11 +323,11 @@ func (prop *PropertyInt16) ReadInt16() int16 {
 	return prop.Value
 }
 
-func (prop *PropertyInt16) GetTimestamp() time.Time {
+func (prop *PropertyInt16) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyInt32 struct {
@@ -339,13 +339,13 @@ type PropertyInt32 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyInt32(description string, defaultValue int32, min, max int, readOnly, userVisible bool, unit string) *PropertyInt32 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyInt32{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyInt32{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyInt32RW(description string, defaultValue int32, min, max int, userVisible bool, unit string) *PropertyInt32 {
@@ -376,7 +376,7 @@ func (prop *PropertyInt32) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int32)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -385,7 +385,7 @@ func (prop *PropertyInt32) WriteInt32(value int32) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyInt32) Read() interface{} {
@@ -402,11 +402,11 @@ func (prop *PropertyInt32) ReadInt32() int32 {
 	return prop.Value
 }
 
-func (prop *PropertyInt32) GetTimestamp() time.Time {
+func (prop *PropertyInt32) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyInt64 struct {
@@ -418,13 +418,13 @@ type PropertyInt64 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyInt64(description string, defaultValue int64, min, max int, readOnly, userVisible bool, unit string) *PropertyInt64 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyInt64{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyInt64{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyInt64RW(description string, defaultValue int64, min, max int, userVisible bool, unit string) *PropertyInt64 {
@@ -455,7 +455,7 @@ func (prop *PropertyInt64) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(int64)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -464,7 +464,7 @@ func (prop *PropertyInt64) WriteInt64(value int64) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyInt64) Read() interface{} {
@@ -481,11 +481,11 @@ func (prop *PropertyInt64) ReadInt64() int64 {
 	return prop.Value
 }
 
-func (prop *PropertyInt64) GetTimestamp() time.Time {
+func (prop *PropertyInt64) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyUint struct {
@@ -497,13 +497,13 @@ type PropertyUint struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyUint(description string, defaultValue uint, min, max int, readOnly, userVisible bool, unit string) *PropertyUint {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyUint{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyUint{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyUintRW(description string, defaultValue uint, min, max int, userVisible bool, unit string) *PropertyUint {
@@ -534,7 +534,7 @@ func (prop *PropertyUint) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -543,7 +543,7 @@ func (prop *PropertyUint) WriteUint(value uint) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyUint) Read() interface{} {
@@ -560,11 +560,11 @@ func (prop *PropertyUint) ReadUint() uint {
 	return prop.Value
 }
 
-func (prop *PropertyUint) GetTimestamp() time.Time {
+func (prop *PropertyUint) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyUint8 struct {
@@ -576,13 +576,13 @@ type PropertyUint8 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyUint8(description string, defaultValue uint8, min, max int, readOnly, userVisible bool, unit string) *PropertyUint8 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyUint8{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyUint8{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyUint8RW(description string, defaultValue uint8, min, max int, userVisible bool, unit string) *PropertyUint8 {
@@ -613,7 +613,7 @@ func (prop *PropertyUint8) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint8)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -622,7 +622,7 @@ func (prop *PropertyUint8) WriteUint8(value uint8) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyUint8) Read() interface{} {
@@ -639,11 +639,11 @@ func (prop *PropertyUint8) ReadUint8() uint8 {
 	return prop.Value
 }
 
-func (prop *PropertyUint8) GetTimestamp() time.Time {
+func (prop *PropertyUint8) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyUint16 struct {
@@ -655,13 +655,13 @@ type PropertyUint16 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyUint16(description string, defaultValue uint16, min, max int, readOnly, userVisible bool, unit string) *PropertyUint16 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyUint16{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyUint16{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyUint16RW(description string, defaultValue uint16, min, max int, userVisible bool, unit string) *PropertyUint16 {
@@ -692,7 +692,7 @@ func (prop *PropertyUint16) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint16)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -701,7 +701,7 @@ func (prop *PropertyUint16) WriteUint16(value uint16) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyUint16) Read() interface{} {
@@ -718,11 +718,11 @@ func (prop *PropertyUint16) ReadUint16() uint16 {
 	return prop.Value
 }
 
-func (prop *PropertyUint16) GetTimestamp() time.Time {
+func (prop *PropertyUint16) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyUint32 struct {
@@ -734,13 +734,13 @@ type PropertyUint32 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyUint32(description string, defaultValue uint32, min, max int, readOnly, userVisible bool, unit string) *PropertyUint32 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyUint32{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyUint32{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyUint32RW(description string, defaultValue uint32, min, max int, userVisible bool, unit string) *PropertyUint32 {
@@ -771,7 +771,7 @@ func (prop *PropertyUint32) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint32)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -780,7 +780,7 @@ func (prop *PropertyUint32) WriteUint32(value uint32) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyUint32) Read() interface{} {
@@ -797,11 +797,11 @@ func (prop *PropertyUint32) ReadUint32() uint32 {
 	return prop.Value
 }
 
-func (prop *PropertyUint32) GetTimestamp() time.Time {
+func (prop *PropertyUint32) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyUint64 struct {
@@ -813,13 +813,13 @@ type PropertyUint64 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyUint64(description string, defaultValue uint64, min, max int, readOnly, userVisible bool, unit string) *PropertyUint64 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyUint64{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyUint64{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyUint64RW(description string, defaultValue uint64, min, max int, userVisible bool, unit string) *PropertyUint64 {
@@ -850,7 +850,7 @@ func (prop *PropertyUint64) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(uint64)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -859,7 +859,7 @@ func (prop *PropertyUint64) WriteUint64(value uint64) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyUint64) Read() interface{} {
@@ -876,11 +876,11 @@ func (prop *PropertyUint64) ReadUint64() uint64 {
 	return prop.Value
 }
 
-func (prop *PropertyUint64) GetTimestamp() time.Time {
+func (prop *PropertyUint64) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyBool struct {
@@ -892,13 +892,13 @@ type PropertyBool struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyBool(description string, defaultValue bool, min, max int, readOnly, userVisible bool, unit string) *PropertyBool {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyBool{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyBool{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyBoolRW(description string, defaultValue bool, min, max int, userVisible bool, unit string) *PropertyBool {
@@ -929,7 +929,7 @@ func (prop *PropertyBool) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(bool)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -938,7 +938,7 @@ func (prop *PropertyBool) WriteBool(value bool) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyBool) Read() interface{} {
@@ -955,11 +955,11 @@ func (prop *PropertyBool) ReadBool() bool {
 	return prop.Value
 }
 
-func (prop *PropertyBool) GetTimestamp() time.Time {
+func (prop *PropertyBool) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyFloat32 struct {
@@ -971,13 +971,13 @@ type PropertyFloat32 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyFloat32(description string, defaultValue float32, min, max int, readOnly, userVisible bool, unit string) *PropertyFloat32 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyFloat32{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyFloat32{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyFloat32RW(description string, defaultValue float32, min, max int, userVisible bool, unit string) *PropertyFloat32 {
@@ -1008,7 +1008,7 @@ func (prop *PropertyFloat32) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(float32)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -1017,7 +1017,7 @@ func (prop *PropertyFloat32) WriteFloat32(value float32) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyFloat32) Read() interface{} {
@@ -1034,11 +1034,11 @@ func (prop *PropertyFloat32) ReadFloat32() float32 {
 	return prop.Value
 }
 
-func (prop *PropertyFloat32) GetTimestamp() time.Time {
+func (prop *PropertyFloat32) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 type PropertyFloat64 struct {
@@ -1050,13 +1050,13 @@ type PropertyFloat64 struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyFloat64(description string, defaultValue float64, min, max int, readOnly, userVisible bool, unit string) *PropertyFloat64 {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyFloat64{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyFloat64{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyFloat64RW(description string, defaultValue float64, min, max int, userVisible bool, unit string) *PropertyFloat64 {
@@ -1087,7 +1087,7 @@ func (prop *PropertyFloat64) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(float64)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -1096,7 +1096,7 @@ func (prop *PropertyFloat64) WriteFloat64(value float64) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyFloat64) Read() interface{} {
@@ -1113,9 +1113,9 @@ func (prop *PropertyFloat64) ReadFloat64() float64 {
 	return prop.Value
 }
 
-func (prop *PropertyFloat64) GetTimestamp() time.Time {
+func (prop *PropertyFloat64) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }

@@ -3,9 +3,9 @@ package property
 import (
 	"fmt"
 	"github.com/mauricelam/genny/generic"
+	"github.com/rs/xid"
 	"reflect"
 	"sync"
-	"time"
 )
 
 type PropValueType generic.Type
@@ -19,13 +19,13 @@ type PropertyPropValueType struct {
 	Min         int           `json:"min"`
 	Max         int           `json:"max"`
 	mutex       *sync.RWMutex `json:"-"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 }
 
 func NewPropertyPropValueType(description string, defaultValue PropValueType, min, max int, readOnly, userVisible bool, unit string) *PropertyPropValueType {
 	mutex := &sync.RWMutex{}
-	timestamp := time.Now()
-	return &PropertyPropValueType{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, timestamp}
+	id := xid.ID{}
+	return &PropertyPropValueType{defaultValue, readOnly, userVisible, description, unit, max, min, mutex, id}
 }
 
 func NewPropertyPropValueTypeRW(description string, defaultValue PropValueType, min, max int, userVisible bool, unit string) *PropertyPropValueType {
@@ -56,7 +56,7 @@ func (prop *PropertyPropValueType) Write(value interface{}) error {
 	}
 	valueOfValue := reflect.ValueOf(value)
 	prop.Value = valueOfValue.Convert(typeOfPortValue).Interface().(PropValueType)
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 	return nil
 }
 
@@ -65,7 +65,7 @@ func (prop *PropertyPropValueType) WritePropValueType(value PropValueType) {
 	defer prop.mutex.Unlock()
 
 	prop.Value = value
-	prop.timestamp = time.Now()
+	prop.id = xid.New()
 }
 
 func (prop *PropertyPropValueType) Read() interface{} {
@@ -82,9 +82,9 @@ func (prop *PropertyPropValueType) ReadPropValueType() PropValueType {
 	return prop.Value
 }
 
-func (prop *PropertyPropValueType) GetTimestamp() time.Time {
+func (prop *PropertyPropValueType) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }

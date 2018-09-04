@@ -1,24 +1,38 @@
 package port
 
 import (
-	"time"
+	"github.com/rs/xid"
 )
 
-type PortWriter interface {
+type BlockingType int
+
+const (
+	PortBlockingNone BlockingType = iota
+	PortBlockingNew
+	PortBlockingDiff
+)
+
+type OutputPort interface {
 	read() interface{}
-	GetTimestamp() time.Time
+
+	GetID() xid.ID
 }
 
-type PortReader interface {
+type InputPort interface {
 	write(interface{}) error
-	IsRequiredNew() bool
+
+	IsBlockingNew() bool
+	IsBlockingDiff() bool
+
 	ValueChanged() bool
+	ValueNew() bool
 }
 
-type OutputPort struct {
-	Timestamp time.Time `json:"timestamp"`
+type BaseOutputPort struct {
+	id xid.ID
 }
 
-type InputPort struct {
-	RequiredNew bool
+type BaseInputPort struct {
+	blockingType BlockingType
+	valueNew bool
 }

@@ -34,8 +34,8 @@ type BaseNode struct {
 	Description   string                     `json:"description"`
 	Version       string                     `json:"version"`
 	ID            string                     `json:"id"`
-	Inputs        map[string]port.PortReader `json:"inputs"`
-	Outputs       map[string]port.PortWriter `json:"outputs"`
+	Inputs        map[string]port.InputPort  `json:"inputs"`
+	Outputs       map[string]port.OutputPort `json:"outputs"`
 	ConnectorsIDs []string                   `json:"connectors"`
 }
 

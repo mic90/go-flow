@@ -2,15 +2,15 @@ package property
 
 import (
 	"fmt"
+	"github.com/rs/xid"
 	"reflect"
 	"sync"
-	"time"
 )
 
 type PropertyAlarm struct {
 	Description string        `json:"description"`
 	Value       bool          `json:"value"`
-	timestamp   time.Time     `json:"-"`
+	id          xid.ID        `json:"-"`
 	mutex       *sync.RWMutex `json:"-"`
 }
 
@@ -37,15 +37,15 @@ func (alarm *PropertyAlarm) Write(value interface{}) error {
 	}
 
 	alarm.Value = value.(bool)
-	alarm.timestamp = time.Now()
+	alarm.id = xid.New()
 	return nil
 }
 
-func (prop *PropertyAlarm) GetTimestamp() time.Time {
+func (prop *PropertyAlarm) GetID() xid.ID {
 	prop.mutex.RLock()
 	defer prop.mutex.RUnlock()
 
-	return prop.timestamp
+	return prop.id
 }
 
 func (alarm *PropertyAlarm) ReadBool() bool {
